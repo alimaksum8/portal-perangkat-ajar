@@ -1373,6 +1373,73 @@
         function hapusPemisahProta(button) { const separator = button.closest('main').querySelector('.semester-separator:last-of-type'); if (separator) separator.remove(); }
         
         // --- FUNGSI PEMBUATAN PDF ---
+        async function cetakDenganServer(dataUntukCetak) {
+            // Ganti dengan URL Vercel Anda yang sebenarnya
+            const serverUrl = 'https://portal-perangkat-ajar-s5b4.vercel.app/';
+            showNotification("Mempersiapkan PDF Anda... Ini mungkin memakan waktu sejenak.", false);
+
+            try {
+                const response = await fetch(serverUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(dataUntukCetak),
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Gagal membuat PDF di server: ${errorText}`);
+                }
+
+                // Menerima file PDF dari server
+                const pdfBlob = await response.blob();
+                
+                // Memicu unduhan di browser pengguna
+                const url = window.URL.createObjectURL(pdfBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = "Perangkat Ajar.pdf";
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+                showNotification("PDF berhasil diunduh!", false);
+
+            } catch (error) {
+                console.error("Gagal menghubungi server cetak:", error);
+                showNotification("Gagal membuat PDF. Periksa konsol untuk detail.", true);
+            }
+        }
+
+        function cetakHalaman(pageIds = []) {
+            if (pageIds.length === 0) {
+                showNotification("Tidak ada halaman yang dipilih untuk dicetak.", true);
+                return;
+            }
+
+            const isProsemSelected = pageIds.includes('halaman-prosem');
+            const isOnlyProsemSelected = pageIds.length === 1 && isProsemSelected;
+
+            const dataUntukCetak = {
+                pagesToGenerate: pageIds,
+                orientasi: isOnlyProsemSelected ? 'landscape' : 'portrait',
+                infoUmum: {
+                    mataPelajaran: namaMataPelajaran,
+                    namaPenyusun: namaPenyusun,
+                    kelasSemester: kelasSemester,
+                    tahunPelajaran: tahunPelajaran,
+                    namaMadrasah: document.querySelector('.madrasah-select').value,
+                    kepalaMadrasah: kepalaMadrasahData[document.querySelector('.madrasah-select').value]
+                },
+                dataCp,
+                dataTp,
+                dataCpDeskripsi
+            };
+
+            cetakDenganServer(dataUntukCetak);
+        }
+
         function cetakHalamanTunggal(pageId) {
             cetakHalaman([pageId]);
         }
@@ -1409,64 +1476,6 @@
             sembunyikanModalCetakSemua();
             cetakHalaman(halamanTerpilihIds);
         }
-
-        function cetakHalaman(pageIds = []) {
-            if (pageIds.length === 0) {
-                showNotification("Tidak ada halaman yang dipilih untuk dicetak.", true);
-                return;
-            }
-
-            const printArea = document.createElement('div');
-            printArea.id = 'print-area';
-
-            pageIds.forEach(id => {
-                const pageElement = document.getElementById(id);
-                if (pageElement) {
-                    const clone = pageElement.cloneNode(true);
-                    clone.classList.remove('hidden-page');
-                    clone.classList.add('print-page');
-                    printArea.appendChild(clone);
-                }
-            });
-            
-            document.body.appendChild(printArea);
-
-            const styleId = 'print-orientation-style';
-            let styleElement = document.getElementById(styleId);
-            if (!styleElement) {
-                styleElement = document.createElement('style');
-                styleElement.id = styleId;
-                document.head.appendChild(styleElement);
-            }
-
-            const isProsemSelected = pageIds.includes('halaman-prosem');
-            const isOnlyProsemSelected = pageIds.length === 1 && isProsemSelected;
-
-            let pageStyle = `@page { size: ${isOnlyProsemSelected ? 'landscape' : 'portrait'};`;
-            if (isOnlyProsemSelected) {
-                pageStyle += ' margin: 1cm 0.5cm;';
-            }
-            pageStyle += ' }';
-            
-            styleElement.innerHTML = pageStyle;
-
-            window.print();
-
-            // Cleanup setelah dialog cetak ditutup
-            const cleanup = () => {
-                const pa = document.getElementById('print-area');
-                if (pa) pa.remove();
-                const se = document.getElementById(styleId);
-                if (se) se.remove();
-                window.onafterprint = null; // Hapus event handler
-            };
-
-            window.onafterprint = cleanup;
-            
-            // Fallback untuk browser yang tidak mendukung onafterprint
-            setTimeout(cleanup, 1000);
-        }
-
 
         // --- INISIALISASI ---
         document.addEventListener('DOMContentLoaded', () => {
