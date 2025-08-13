@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Perangkat Ajar - Kurikulum Merdeka</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDKs -->
+    <script type="module">
+        // Import fungsi yang Anda butuhkan dari SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, getDocs, orderBy, limit, serverTimestamp, onSnapshot, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // Konfigurasi Firebase Anda
+        const firebaseConfig = {
+            apiKey: "AIzaSyAgPNK-KFhQx6tm2yW-WvZ8KY6Himh89ZA",
+            authDomain: "perangkat-kurmer.firebaseapp.com",
+            projectId: "perangkat-kurmer",
+            storageBucket: "perangkat-kurmer.appspot.com",
+            messagingSenderId: "372136400794",
+            appId: "1:372136400794:web:6192105f5a45d343318c23",
+            measurementId: "G-YR32BVXFPQ"
+        };
+
+        // Inisialisasi Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Membuat instance tersedia secara global
+        window.firebase = { app, auth, db, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, doc, setDoc, getDoc, collection, addDoc, query, getDocs, orderBy, limit, serverTimestamp, onSnapshot, deleteDoc };
+    </script>
+
+    <!-- Custom Styles -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .gradient-bg {
+            background-color: #f8fafc;
+            background-image: radial-gradient(circle at top left, #e0e7ff 0%, #f8fafc 40%);
+        }
+        .btn-custom {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .btn-custom:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .hidden-page {
+            display: none;
+        }
+        [contenteditable="true"] {
+            outline: 2px solid transparent;
+            transition: outline 0.2s ease;
+            padding: 4px;
+            border-radius: 4px;
+        }
+        [contenteditable="true"]:focus {
+            outline: 2px solid #6366f1; /* Indigo-500 */
+            background-color: #fefce8; /* yellow-50 */
+        }
+        .form-section {
+            padding: 1rem;
+        }
+        .form-section h3 {
+            margin-bottom: 0.5rem;
+        }
+        .select-linked {
+            width: 100%;
+            padding: 4px;
+            border-radius: 4px;
+            border: 1px solid #d1d5db;
+            background-color: #fff;
+        }
+        .data-display {
+            background-color: #f9fafb; /* gray-50 */
+            color: #374151; /* gray-700 */
+        }
+        .inline-select {
+            border: none;
+            background: transparent;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            cursor: pointer;
+        }
+        .inline-select:focus {
+            outline: 2px solid #6366f1;
+            background-color: #fefce8;
+        }
+        @media print {
+            body > *:not(#print-area) {
+                display: none !important;
+            }
+            #print-area {
+                display: block !important;
+            }
+            .print-page {
+                display: block !important;
+                page-break-after: always;
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                background: none !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+            }
+            body {
+                background-image: none !important;
+                background-color: white !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th, td {
+                border: 1px solid #000 !important;
+            }
+            #halaman-prosem .prosem-atp-col {
+                width: 6cm;
+                text-align: left;
+            }
+            #halaman-prosem thead tr:first-child th[colspan] {
+                border-bottom-color: transparent !important;
+            }
+            #halaman-prosem #prosem-weeks-header th {
+                border-top-color: transparent !important;
+            }
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-start justify-center py-8">
+    <!-- Kontainer Utama -->
+    <div class="w-full max-w-7xl mx-auto px-4">
+
+        <!-- === HALAMAN LOGIN === -->
+        <main id="halaman-login" class="bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-lg p-6 sm:p-8 md:p-12">
+            <header class="text-center mb-10">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 tracking-tight">Login Portal</h1>
+                <p class="mt-3 text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">Silakan masuk untuk melanjutkan. Jika akun belum ada, akan dibuat otomatis.</p>
+            </header>
+            <div class="max-w-md mx-auto">
+                <div class="mb-4">
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="email" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div class="mb-6">
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" id="password" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                 <p id="login-error" class="text-red-500 text-sm mb-4 text-center hidden"></p>
+                <button onclick="handleLogin()" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Login
+                </button>
+            </div>
+        </main>
+
+        <!-- === HALAMAN UTAMA === -->
+        <main id="halaman-utama" data-title="Halaman Utama" class="hidden-page bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-lg p-6 sm:p-8 md:p-12">
+            <header class="text-center mb-10">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 tracking-tight">Portal Perangkat Ajar</h1>
+                <p class="mt-3 text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">Akses cepat dan mudah ke semua perangkat ajar Kurikulum Merdeka yang Anda butuhkan.</p>
+            </header>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                <button onclick="tampilkanHalaman('halaman-cp')" class="btn-custom group block p-6 bg-white rounded-xl border border-gray-200/80 text-center"><h2 class="text-xl font-bold text-indigo-600">CP</h2><p class="mt-1 text-gray-700 group-hover:text-indigo-700 transition-colors">Capaian Pembelajaran</p></button>
+                <button onclick="tampilkanHalaman('halaman-tp')" class="btn-custom group block p-6 bg-white rounded-xl border border-gray-200/80 text-center"><h2 class="text-xl font-bold text-sky-600">TP</h2><p class="mt-1 text-gray-700 group-hover:text-sky-700 transition-colors">Tujuan Pembelajaran</p></button>
+                <button onclick="tampilkanHalaman('halaman-atp')" class="btn-custom group block p-6 bg-white rounded-xl border border-gray-200/80 text-center"><h2 class="text-xl font-bold text-emerald-600">ATP</h2><p class="mt-1 text-gray-700 group-hover:text-emerald-700 transition-colors">Alur Tujuan Pembelajaran</p></button>
+                <button onclick="tampilkanHalaman('halaman-modul-ajar')" class="btn-custom group block p-6 bg-white rounded-xl border border-gray-200/80 text-center"><h2 class="text-xl font-bold text-amber-600">Modul Ajar</h2><p class="mt-1 text-gray-700 group-hover:text-amber-700 transition-colors">Kumpulan Modul Ajar</p></button>
+                <button onclick="tampilkanHalaman('halaman-lkpd')" class="btn-custom group block p-6 bg-white rounded-xl border border-gray-200/80 text-center"><h2 class="text-xl font-bold text-rose-600">LKPD</h2><p class="mt-1 text-gray-700 group-hover:text-rose-700 transition-colors">Lembar Kerja Peserta Didik</p></button>
+                <button onclick="tampilkanHalaman('halaman-lainnya')" class="btn-custom group block p-6 bg-gray-50 rounded-xl border border-dashed border-gray-300 text-center hover:border-gray-400"><h2 class="text-xl font-bold text-gray-500 group-hover:text-gray-600">+</h2><p class="mt-1 text-gray-500 group-hover:text-gray-600">Menu Lainnya</p></button>
+            </div>
+            <div class="text-center mt-8 flex justify-center items-center space-x-4 no-print">
+                <button onclick="tampilkanModalSimpan()" class="bg-green-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-green-700 transition-colors">Simpan Arsip</button>
+                <button onclick="tampilkanModalArsip()" class="bg-yellow-500 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-yellow-600 transition-colors">Lihat Arsip</button>
+                <button onclick="tampilkanModalCetakSemua()" class="bg-purple-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-purple-700 transition-colors">Cetak Semua</button>
+                <button onclick="handleLogout()" class="bg-red-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-red-700 transition-colors">Logout</button>
+            </div>
+            <footer class="text-center mt-12"><p class="text-sm text-gray-500">&copy; Dev. By Ali Maksum</p></footer>
+        </main>
+
+        <!-- === HALAMAN CAPAIAN PEMBELAJARAN (CP) === -->
+        <main id="halaman-cp" data-title="Capaian Pembelajaran (CP)" class="hidden-page bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-lg p-6 sm:p-8 md:p-12">
+            <header class="text-center mb-4"><h1 class="text-3xl sm:text-4xl font-bold text-gray-800 tracking-tight">Capaian Pembelajaran (CP)</h1><p class="mt-3 text-base text-gray-600 max-w-2xl mx-auto">Data di sini akan menjadi sumber utama untuk halaman lain. Klik untuk mengedit.</p></header>
+            <div class="mb-8 text-sm">
+                <table class="w-full">
+                    <tbody>
+                        <tr>
+                            <td class="font-semibold w-1/4">Mata Pelajaran</td>
+                            <td class="w-1/4 mapel-input" contenteditable="true">: Bahasa Indonesia</td>
+                            <td class="font-semibold w-1/4">Nama Madrasah</td>
+                            <td class="w-1/4">: <select class="madrasah-select inline-select"><option>MTs. Darul Huda</option><option>MA Darul Huda</option></select></td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Kelas / Semester</td>
+                            <td class="kelas-semester-input" contenteditable="true">: VIII / GANJIL</td>
+                            <td class="font-semibold">Tahun Pelajaran</td>
+                            <td class="tahun-pelajaran-input" contenteditable="true">: 2024-2025</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <hr class="mt-2 border-black">
+            </div>
+
+            <div class="mb-4 text-right no-print"><button onclick="tambahBarisCpDeskripsi()" class="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md hover:bg-green-700 transition-colors text-sm">+ Tambah Baris</button></div>
+            <div class="overflow-x-auto mb-8">
+                <table class="min-w-full border-collapse">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Capaian Pembelajaran</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Deskripsi</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border border-black no-print">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelCpDeskripsiBody" class="bg-white">
+                        <!-- Baris akan ditambahkan oleh JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <hr class="my-6 border-gray-300">
+
+            <div class="mb-4 text-right no-print"><button onclick="tambahBarisCp()" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md hover:bg-indigo-700 transition-colors text-sm">+ Tambah Baris Elemen</button></div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full border-collapse">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Elemen</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Capaian Pembelajaran</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border border-black no-print">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelCpBody" class="bg-white"></tbody>
+                </table>
+            </div>
+            <div class="text-center mt-10 space-x-4 no-print"><button onclick="tampilkanHalaman('halaman-utama')" class="inline-block bg-gray-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-gray-700 transition-colors">&larr; Kembali</button><button onclick="cetakHalamanTunggal('halaman-cp')" class="inline-block bg-teal-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-teal-700 transition-colors">Buat PDF Halaman Ini</button></div>
+        </main>
+        
+        <!-- === HALAMAN TUJUAN PEMBELAJARAN (TP) === -->
+        <main id="halaman-tp" data-title="Tujuan Pembelajaran (TP)" class="hidden-page bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-lg p-6 sm:p-8 md:p-12">
+            <header class="text-center mb-4"><h1 class="text-3xl sm:text-4xl font-bold text-gray-800 tracking-tight">Tujuan Pembelajaran (TP)</h1><p class="mt-3 text-base text-gray-600 max-w-2xl mx-auto">Data di sini akan menjadi sumber untuk halaman lain. Gunakan tombol untuk mengelola data.</p></header>
+            <div class="mb-8 text-sm">
+                <table class="w-full">
+                    <tbody>
+                        <tr>
+                            <td class="font-semibold w-1/4">Mata Pelajaran</td>
+                            <td class="w-1/4 mapel-input" contenteditable="true">: Bahasa Indonesia</td>
+                            <td class="font-semibold w-1/4">Nama Madrasah</td>
+                            <td class="w-1/4">: <select class="madrasah-select inline-select"><option>MTs. Darul Huda</option><option>MA Darul Huda</option></select></td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Kelas / Semester</td>
+                            <td class="kelas-semester-input" contenteditable="true">: VIII / GANJIL</td>
+                            <td class="font-semibold">Tahun Pelajaran</td>
+                            <td class="tahun-pelajaran-input" contenteditable="true">: 2024-2025</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <hr class="mt-2 border-black">
+            </div>
+            <div class="mb-4 text-right no-print"><button onclick="bukaModalTambahGrup()" class="bg-sky-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md hover:bg-sky-700 transition-colors text-sm">+ Tambah Grup Elemen</button></div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full border-collapse">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Elemen</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Capaian Pembelajaran</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Lingkup Materi</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Tujuan Pembelajaran</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border border-black no-print">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelTpBody" class="bg-white"></tbody>
+                </table>
+            </div>
+            <div class="text-center mt-10 space-x-4 no-print"><button onclick="tampilkanHalaman('halaman-utama')" class="inline-block bg-gray-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-gray-700 transition-colors">&larr; Kembali</button><button onclick="cetakHalamanTunggal('halaman-tp')" class="inline-block bg-teal-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-teal-700 transition-colors">Buat PDF Halaman Ini</button></div>
+        </main>
+
+        <!-- === HALAMAN ALUR TUJUAN PEMBELAJARAN (ATP) === -->
+        <main id="halaman-atp" data-title="Alur Tujuan Pembelajaran (ATP)" class="hidden-page bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-lg p-6 sm:p-8 md:p-12">
+            <header class="text-center mb-4"><h1 class="text-3xl sm:text-4xl font-bold text-gray-800 tracking-tight">Alur Tujuan Pembelajaran (ATP)</h1><p class="mt-3 text-base text-gray-600 max-w-2xl mx-auto">Tabel ini tersinkronisasi dari halaman TP. Isi kolom yang dapat diedit.</p></header>
+            <div class="mb-8 text-sm">
+                <table class="w-full">
+                    <tbody>
+                        <tr>
+                            <td class="font-semibold w-1/4">Mata Pelajaran</td>
+                            <td class="w-1/4 mapel-input" contenteditable="true">: Bahasa Indonesia</td>
+                            <td class="font-semibold w-1/4">Nama Madrasah</td>
+                            <td class="w-1/4">: <select class="madrasah-select inline-select"><option>MTs. Darul Huda</option><option>MA Darul Huda</option></select></td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Kelas / Semester</td>
+                            <td class="kelas-semester-input" contenteditable="true">: VIII / GANJIL</td>
+                            <td class="font-semibold">Tahun Pelajaran</td>
+                            <td class="tahun-pelajaran-input" contenteditable="true">: 2024-2025</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <hr class="mt-2 border-black">
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full border-collapse">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Elemen</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Capaian Pembelajaran</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Tujuan Pembelajaran</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Alur Tujuan Pembelajaran</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Alokasi Waktu</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border border-black no-print">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelAtpBody" class="bg-white"></tbody>
+                </table>
+            </div>
+            <div class="text-center mt-10 space-x-4 no-print"><button onclick="tampilkanHalaman('halaman-utama')" class="inline-block bg-gray-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-gray-700 transition-colors">&larr; Kembali</button><button onclick="cetakHalamanTunggal('halaman-atp')" class="inline-block bg-teal-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-teal-700 transition-colors">Buat PDF Halaman Ini</button></div>
+        </main>
+        
+        <!-- === HALAMAN MODUL AJAR === -->
+        <main id="halaman-modul-ajar" data-title="Modul Ajar" class="hidden-page bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-lg p-6 sm:p-8 md:p-12">
+            <header class="text-center mb-4"><h1 class="text-3xl sm:text-4xl font-bold text-gray-800 tracking-tight">Modul Ajar</h1><p class="mt-3 text-base text-gray-600 max-w-2xl mx-auto">Klik pada teks di bawah untuk mulai menyusun Modul Ajar Anda.</p></header>
+            <div class="mb-8 text-sm">
+                <table class="w-full">
+                    <tbody>
+                        <tr>
+                            <td class="font-semibold w-1/4">Mata Pelajaran</td>
+                            <td class="w-1/4 mapel-input" contenteditable="true">: Bahasa Indonesia</td>
+                            <td class="font-semibold w-1/4">Nama Madrasah</td>
+                            <td class="w-1/4">: <select class="madrasah-select inline-select"><option>MTs. Darul Huda</option><option>MA Darul Huda</option></select></td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Kelas / Semester</td>
+                            <td class="kelas-semester-input" contenteditable="true">: VIII / GANJIL</td>
+                            <td class="font-semibold">Tahun Pelajaran</td>
+                            <td class="tahun-pelajaran-input" contenteditable="true">: 2024-2025</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <hr class="mt-2 border-black">
+            </div>
+            <div class="space-y-8">
+                <div><h2 class="text-2xl font-bold text-gray-800 border-b-2 border-black pb-2 mb-4">A. Informasi Umum</h2><div class="border border-black rounded-lg divide-y divide-black"><div class="form-section">
+                    <h3 class="font-semibold text-gray-700">Identitas Modul</h3>
+                    <table class="mt-1 text-gray-600 w-full text-sm">
+                        <tbody>
+                            <tr>
+                                <td class="w-1/4">Nama Penyusun</td>
+                                <td>: <span id="nama-penyusun-input" contenteditable="true">Ali Maksum, S.Pd.I</span></td>
+                            </tr>
+                            <tr>
+                                <td class="w-1/4">Alokasi Waktu</td>
+                                <td>: <span contenteditable="true">2 JP</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div><div class="form-section"><h3 class="font-semibold text-gray-700">Kompetensi Awal</h3><div contenteditable="true" class="mt-1 text-gray-600">Tuliskan kompetensi prasyarat yang perlu dimiliki siswa.</div></div><div class="form-section"><h3 class="font-semibold text-gray-700">Profil Pelajar Pancasila</h3><div contenteditable="true" class="mt-1 text-gray-600">Contoh: Beriman, bertakwa kepada Tuhan YME, dan berakhlak mulia, Mandiri, Bernalar Kritis.</div></div></div></div>
+                <div><h2 class="text-2xl font-bold text-gray-800 border-b-2 border-black pb-2 mb-4">B. Komponen Inti</h2><div class="border border-black rounded-lg divide-y divide-black"><div class="form-section"><h3 class="font-semibold text-gray-700">Tujuan Pembelajaran</h3><div contenteditable="true" class="mt-1 text-gray-600">Tuliskan tujuan pembelajaran yang ingin dicapai dari modul ini.</div></div><div class="form-section"><h3 class="font-semibold text-gray-700">Pemahaman Bermakna</h3><div contenteditable="true" class="mt-1 text-gray-600">Tuliskan pemahaman penting yang akan didapat siswa setelah mempelajari modul ini.</div></div><div class="form-section"><h3 class="font-semibold text-gray-700">Pertanyaan Pemantik</h3><div contenteditable="true" class="mt-1 text-gray-600">1. Pertanyaan pertama...<br>2. Pertanyaan kedua...</div></div><div class="form-section"><h3 class="font-semibold text-gray-700">Kegiatan Pembelajaran</h3><div contenteditable="true" class="mt-1 text-gray-600">Rincikan langkah-langkah kegiatan pembelajaran (pendahuluan, inti, penutup).</div></div></div></div>
+                <div><h2 class="text-2xl font-bold text-gray-800 border-b-2 border-black pb-2 mb-4">C. Lampiran</h2><div class="border border-black rounded-lg divide-y divide-black"><div class="form-section"><h3 class="font-semibold text-gray-700">Lembar Kerja Peserta Didik (LKPD)</h3><div contenteditable="true" class="mt-1 text-gray-600">Lampirkan atau tuliskan LKPD di sini.</div></div><div class="form-section"><h3 class="font-semibold text-gray-700">Bahan Bacaan Guru & Peserta Didik</h3><div contenteditable="true" class="mt-1 text-gray-600">Sediakan materi atau tautan bahan bacaan.</div></div></div></div>
+            </div>
+            <div class="text-center mt-12 space-x-4 no-print"><button onclick="tampilkanHalaman('halaman-utama')" class="inline-block bg-gray-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-gray-700 transition-colors">&larr; Kembali</button><button onclick="cetakHalamanTunggal('halaman-modul-ajar')" class="inline-block bg-teal-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-teal-700 transition-colors">Buat PDF Halaman Ini</button></div>
+        </main>
+
+        <!-- === HALAMAN LEMBAR KERJA PESERTA DIDIK (LKPD) === -->
+        <main id="halaman-lkpd" data-title="Lembar Kerja Peserta Didik (LKPD)" class="hidden-page bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-lg p-6 sm:p-8 md:p-12">
+            <header class="text-center mb-4"><h1 class="text-3xl sm:text-4xl font-bold text-gray-800 tracking-tight">Lembar Kerja Peserta Didik (LKPD)</h1><p class="mt-3 text-base text-gray-600 max-w-2xl mx-auto">Klik pada teks di bawah untuk mulai menyusun LKPD.</p></header>
+            <div class="mb-8 text-sm">
+                <table class="w-full">
+                    <tbody>
+                        <tr>
+                            <td class="font-semibold w-1/4">Mata Pelajaran</td>
+                            <td class="w-1/4 mapel-input" contenteditable="true">: Bahasa Indonesia</td>
+                            <td class="font-semibold w-1/4">Nama Madrasah</td>
+                            <td class="w-1/4">: <select class="madrasah-select inline-select"><option>MTs. Darul Huda</option><option>MA Darul Huda</option></select></td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Kelas / Semester</td>
+                            <td class="kelas-semester-input" contenteditable="true">: VIII / GANJIL</td>
+                            <td class="font-semibold">Tahun Pelajaran</td>
+                            <td class="tahun-pelajaran-input" contenteditable="true">: 2024-2025</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <hr class="mt-2 border-black">
+            </div>
+            <div class="space-y-8"><div class="border border-black rounded-lg divide-y divide-black"><div class="form-section"><h3 class="font-semibold text-gray-700">Judul / Topik LKPD</h3><div contenteditable="true" class="mt-1 text-gray-600">Contoh: Mengidentifikasi Ciri-Ciri Makhluk Hidup</div></div><div class="form-section"><h3 class="font-semibold text-gray-700">Tujuan Pembelajaran</h3><div contenteditable="true" class="mt-1 text-gray-600">1. Peserta didik dapat...<br>2. Melalui kegiatan..., peserta didik dapat...</div></div><div class="form-section"><h3 class="font-semibold text-gray-700">Alat dan Bahan</h3><div contenteditable="true" class="mt-1 text-gray-600">- Alat tulis<br>- Kaca pembesar<br>- Tumbuhan di sekitar sekolah</div></div><div class="form-section"><h3 class="font-semibold text-gray-700">Langkah-Langkah Kegiatan</h3><div contenteditable="true" class="mt-1 text-gray-600">1. Bentuklah kelompok yang terdiri dari 3-4 orang.<br>2. Amatilah lingkungan sekitar...<br>3. Catat hasil pengamatanmu pada tabel di bawah.</div></div><div class="form-section"><h3 class="font-semibold text-gray-700">Tabel Pengamatan / Soal Latihan</h3><div contenteditable="true" class="mt-1 text-gray-600">Anda dapat membuat tabel atau daftar pertanyaan di sini.</div></div><div class="form-section"><h3 class="font-semibold text-gray-700">Kesimpulan</h3><div contenteditable="true" class="mt-1 text-gray-600">Berdasarkan kegiatan yang telah dilakukan, apa yang dapat kamu simpulkan?</div></div></div></div>
+            <div class="text-center mt-12 space-x-4 no-print"><button onclick="tampilkanHalaman('halaman-utama')" class="inline-block bg-gray-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-gray-700 transition-colors">&larr; Kembali</button><button onclick="cetakHalamanTunggal('halaman-lkpd')" class="inline-block bg-teal-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-teal-700 transition-colors">Buat PDF Halaman Ini</button></div>
+        </main>
+
+        <!-- === HALAMAN MENU LAINNYA === -->
+        <main id="halaman-lainnya" data-title="Menu Lainnya" class="hidden-page bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-lg p-6 sm:p-8 md:p-12">
+            <header class="text-center mb-10"><h1 class="text-3xl sm:text-4xl font-bold text-gray-800 tracking-tight">Menu Lainnya</h1><p class="mt-3 text-base text-gray-600 max-w-2xl mx-auto">Pilih menu tambahan yang ingin Anda akses.</p></header>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                <button onclick="tampilkanHalaman('halaman-kktp')" class="btn-custom group block p-6 bg-white rounded-xl border border-gray-200/80 text-center"><h2 class="text-xl font-bold text-teal-600">KKTP</h2><p class="mt-1 text-gray-700 group-hover:text-teal-700 transition-colors">Kriteria Ketercapaian Tujuan Pembelajaran</p></button>
+                <button onclick="tampilkanHalaman('halaman-prota')" class="btn-custom group block p-6 bg-white rounded-xl border border-gray-200/80 text-center"><h2 class="text-xl font-bold text-cyan-600">PROTA</h2><p class="mt-1 text-gray-700 group-hover:text-cyan-700 transition-colors">Program Tahunan</p></button>
+                <button onclick="tampilkanHalaman('halaman-prosem')" class="btn-custom group block p-6 bg-white rounded-xl border border-gray-200/80 text-center"><h2 class="text-xl font-bold text-fuchsia-600">PROSEM</h2><p class="mt-1 text-gray-700 group-hover:text-fuchsia-700 transition-colors">Program Semester</p></button>
+            </div>
+            <div class="text-center mt-12 space-x-4 no-print"><button onclick="tampilkanHalaman('halaman-utama')" class="inline-block bg-gray-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-gray-700 transition-colors">&larr; Kembali</button></div>
+        </main>
+
+        <!-- === HALAMAN KKTP === -->
+        <main id="halaman-kktp" data-title="Kriteria Ketercapaian Tujuan Pembelajaran (KKTP)" class="hidden-page bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-lg p-6 sm:p-8 md:p-12">
+            <header class="text-center mb-4"><h1 class="text-3xl sm:text-4xl font-bold text-gray-800 tracking-tight">Kriteria Ketercapaian Tujuan Pembelajaran (KKTP)</h1><p class="mt-3 text-base text-gray-600 max-w-2xl mx-auto">Tabel ini tersinkronisasi dari halaman TP. Isi kolom yang dapat diedit.</p></header>
+            <div class="mb-8 text-sm">
+                <table class="w-full">
+                    <tbody>
+                        <tr>
+                            <td class="font-semibold w-1/4">Mata Pelajaran</td>
+                            <td class="w-1/4 mapel-input" contenteditable="true">: Bahasa Indonesia</td>
+                            <td class="font-semibold w-1/4">Nama Madrasah</td>
+                            <td class="w-1/4">: <select class="madrasah-select inline-select"><option>MTs. Darul Huda</option><option>MA Darul Huda</option></select></td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Kelas / Semester</td>
+                            <td class="kelas-semester-input" contenteditable="true">: VIII / GANJIL</td>
+                            <td class="font-semibold">Tahun Pelajaran</td>
+                            <td class="tahun-pelajaran-input" contenteditable="true">: 2024-2025</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <hr class="mt-2 border-black">
+            </div>
+            <header class="text-center my-6"><h2 class="text-2xl font-bold text-gray-800 tracking-tight">Detail Penilaian KKTP</h2></header>
+            <div class="overflow-x-auto">
+                <table class="min-w-full border-collapse">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" rowspan="2" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black align-middle">No</th>
+                            <th scope="col" rowspan="2" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black align-middle">Tujuan Pembelajaran (TP)</th>
+                            <th scope="col" rowspan="2" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black align-middle">Kriteria</th>
+                            <th scope="col" colspan="5" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Interval Nilai</th>
+                            <th scope="col" rowspan="2" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black align-middle">Nilai</th>
+                            <th scope="col" rowspan="2" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black align-middle">Keterangan Intervensi</th>
+                        </tr>
+                        <tr>
+                            <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">1</th><th scope="col" class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">2</th><th scope="col" class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">3</th><th scope="col" class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">4</th><th scope="col" class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">5</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelKktpDetailBody" class="bg-white"></tbody>
+                </table>
+            </div>
+            <hr class="my-8 border-black">
+            <header class="text-center mb-6"><h2 class="text-2xl font-bold text-gray-800 tracking-tight">Deskripsi Kriteria Penilaian</h2></header>
+            <div class="overflow-x-auto"><table class="min-w-full border-collapse"><thead class="bg-gray-50"><tr><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">No</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Interval Nilai</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Kriteria</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Intervensi</th></tr></thead><tbody class="bg-white"><tr><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border border-black">1</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border border-black">0-40%</td><td class="px-6 py-4 text-sm text-gray-500 border border-black">Belum Tuntas</td><td class="px-6 py-4 text-sm text-gray-500 border border-black">Remedial di seluruh bagian</td></tr><tr><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border border-black">2</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border border-black">41-60%</td><td class="px-6 py-4 text-sm text-gray-500 border border-black">Belum Tuntas</td><td class="px-6 py-4 text-sm text-gray-500 border border-black">Remedial di bagian yang diperlukan</td></tr><tr><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border border-black">3</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border border-black">61-80%</td><td class="px-6 py-4 text-sm text-gray-500 border border-black">Sudah Tuntas</td><td class="px-6 py-4 text-sm text-gray-500 border border-black">Tidak perlu remedial</td></tr><tr><td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border border-black">4</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border border-black">81-100%</td><td class="px-6 py-4 text-sm text-gray-500 border border-black">Sudah Tuntas</td><td class="px-6 py-4 text-sm text-gray-500 border border-black">Diberikan pengayaan</td></tr></tbody></table></div>
+            <div class="text-center mt-10 space-x-4 no-print"><button onclick="tampilkanHalaman('halaman-lainnya')" class="inline-block bg-gray-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-gray-700 transition-colors">&larr; Kembali</button><button onclick="cetakHalamanTunggal('halaman-kktp')" class="inline-block bg-teal-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-teal-700 transition-colors">Buat PDF Halaman Ini</button></div>
+        </main>
+
+        <!-- === HALAMAN PROTA === -->
+        <main id="halaman-prota" data-title="Program Tahunan (PROTA)" class="hidden-page bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-lg p-6 sm:p-8 md:p-12">
+            <header class="text-center mb-4"><h1 class="text-3xl sm:text-4xl font-bold text-gray-800 tracking-tight">Program Tahunan (PROTA)</h1><p class="mt-3 text-base text-gray-600 max-w-2xl mx-auto">Tabel ini tersinkronisasi dari halaman TP. Isi kolom yang dapat diedit.</p></header>
+            <div class="mb-8 text-sm">
+                <table class="w-full">
+                    <tbody>
+                        <tr>
+                            <td class="font-semibold w-1/4">Mata Pelajaran</td>
+                            <td class="w-1/4 mapel-input" contenteditable="true">: Bahasa Indonesia</td>
+                            <td class="font-semibold w-1/4">Nama Madrasah</td>
+                            <td class="w-1/4">: <select class="madrasah-select inline-select"><option>MTs. Darul Huda</option><option>MA Darul Huda</option></select></td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Kelas / Semester</td>
+                            <td class="kelas-semester-input" contenteditable="true">: VIII / GANJIL</td>
+                            <td class="font-semibold">Tahun Pelajaran</td>
+                            <td class="tahun-pelajaran-input" contenteditable="true">: 2024-2025</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <hr class="mt-2 border-black">
+            </div>
+            <div class="mb-4 text-right space-x-2 no-print"><button onclick="tambahPemisahProta()" class="bg-gray-500 text-white font-semibold px-4 py-2 rounded-lg shadow-md hover:bg-gray-600 transition-colors text-sm">+ Tambah Pemisah Semester</button><button onclick="hapusPemisahProta(this)" class="bg-red-500 text-white font-semibold px-4 py-2 rounded-lg shadow-md hover:bg-red-600 transition-colors text-sm">- Hapus Pemisah</button></div>
+            <div class="overflow-x-auto"><table class="min-w-full border-collapse"><thead class="bg-gray-50"><tr><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">No</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Alur Tujuan Pembelajaran</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Materi</th><th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Alokasi Waktu</th></tr></thead><tbody id="tabelProtaBody" class="bg-white"></tbody></table></div>
+            <div class="text-center mt-10 space-x-4 no-print"><button onclick="tampilkanHalaman('halaman-lainnya')" class="inline-block bg-gray-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-gray-700 transition-colors">&larr; Kembali</button><button onclick="cetakHalamanTunggal('halaman-prota')" class="inline-block bg-teal-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-teal-700 transition-colors">Buat PDF Halaman Ini</button></div>
+        </main>
+
+        <!-- === HALAMAN PROSEM === -->
+        <main id="halaman-prosem" data-title="Program Semester (PROSEM)" class="hidden-page bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-lg p-6 sm:p-8 md:p-12">
+            <header class="text-center mb-4"><h1 class="text-3xl sm:text-4xl font-bold text-gray-800 tracking-tight">Program Semester (PROSEM)</h1><p class="mt-3 text-base text-gray-600 max-w-2xl mx-auto">Tabel ini tersinkronisasi dari halaman TP. Isi kolom yang dapat diedit.</p></header>
+            <div class="mb-8 text-sm">
+                <table class="w-full">
+                    <tbody>
+                        <tr>
+                            <td class="font-semibold w-1/4">Mata Pelajaran</td>
+                            <td class="w-1/4 mapel-input" contenteditable="true">: Bahasa Indonesia</td>
+                            <td class="font-semibold w-1/4">Nama Madrasah</td>
+                            <td class="w-1/4">: <select class="madrasah-select inline-select"><option>MTs. Darul Huda</option><option>MA Darul Huda</option></select></td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold">Kelas / Semester</td>
+                            <td class="kelas-semester-input" contenteditable="true">: VIII / GANJIL</td>
+                            <td class="font-semibold">Tahun Pelajaran</td>
+                            <td class="tahun-pelajaran-input" contenteditable="true">: 2024-2025</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <hr class="mt-2 border-black">
+            </div>
+            <header class="text-center my-6"><h2 class="text-2xl font-bold text-gray-800 tracking-tight">Detail Program Semester</h2></header>
+            <div class="overflow-x-auto">
+                <table class="min-w-full border-collapse text-center">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" rowspan="2" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black align-middle">No</th>
+                            <th scope="col" rowspan="2" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black align-middle prosem-atp-col">Alur Tujuan Pembelajaran</th>
+                            <th scope="col" rowspan="2" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border border-black align-middle">Alokasi Waktu</th>
+                            <th scope="col" colspan="5" class="px-2 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Juli</th>
+                            <th scope="col" colspan="5" class="px-2 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Agustus</th>
+                            <th scope="col" colspan="5" class="px-2 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">September</th>
+                            <th scope="col" colspan="5" class="px-2 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Oktober</th>
+                            <th scope="col" colspan="5" class="px-2 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">November</th>
+                            <th scope="col" colspan="5" class="px-2 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">Desember</th>
+                        </tr>
+                        <tr id="prosem-weeks-header"></tr>
+                    </thead>
+                    <tbody id="tabelProsemDetailBody" class="bg-white"></tbody>
+                </table>
+            </div>
+            
+            <div class="mt-12 flex justify-between text-center text-sm">
+                <div>
+                    <p class="mb-16">Mengetahui,</p>
+                    <p class="font-bold underline kepala-madrasah-name">NAMA KEPALA MADRASAH</p>
+                    <p class="kepala-madrasah-title">Kepala Madrasah</p>
+                </div>
+                <div>
+                    <p class="mb-16">Guru Mata Pelajaran</p>
+                    <p class="font-bold underline guru-penyusun-name">NAMA GURU</p>
+                    <p class="guru-mapel-text">Guru Mapel</p>
+                </div>
+            </div>
+
+            <div class="text-center mt-10 space-x-4 no-print"><button onclick="tampilkanHalaman('halaman-lainnya')" class="inline-block bg-gray-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-gray-700 transition-colors">&larr; Kembali</button><button onclick="cetakHalamanTunggal('halaman-prosem')" class="inline-block bg-teal-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-teal-700 transition-colors">Buat PDF Halaman Ini</button></div>
+        </main>
+
+    </div>
+
+    <!-- Modal Simpan Arsip -->
+    <div id="modal-simpan-arsip" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h3 class="text-xl font-bold mb-4">Simpan Arsip Baru</h3>
+            <div class="mb-4">
+                <label for="input-nama-arsip" class="block text-sm font-medium text-gray-700 mb-1">Nama Arsip:</label>
+                <input type="text" id="input-nama-arsip" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <p id="modal-simpan-error" class="text-red-500 text-sm mt-1 hidden">Nama arsip tidak boleh kosong.</p>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button onclick="sembunyikanModalSimpan()" class="bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors">Batal</button>
+                <button onclick="handleSimpanArsip()" class="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Arsip -->
+    <div id="modal-arsip" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg">
+            <h3 class="text-xl font-bold mb-4">Daftar Arsip Anda</h3>
+            <div id="daftar-arsip" class="space-y-2 mb-4 max-h-80 overflow-y-auto">
+                <!-- Daftar arsip akan diisi oleh JavaScript -->
+                <p>Memuat arsip...</p>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button onclick="sembunyikanModalArsip()" class="bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cetak Semua -->
+    <div id="modal-cetak-semua" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h3 class="text-xl font-bold mb-4">Pilih Halaman untuk Dicetak</h3>
+            <div id="daftar-halaman-cetak" class="space-y-2 mb-4"></div>
+            <p id="modal-cetak-error" class="text-red-500 text-sm mb-4 hidden">Silakan pilih setidaknya satu halaman.</p>
+            <div class="flex justify-end space-x-3">
+                <button onclick="sembunyikanModalCetakSemua()" class="bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded-lg shadow-md hover:bg-gray-400 transition-colors">Batal</button>
+                <button onclick="handleCetakPilihan()" class="bg-purple-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">Cetak Pilihan</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Ganti/Tambah Elemen TP -->
+    <div id="modal-tp-elemen" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h3 id="modal-tp-elemen-title" class="text-xl font-bold mb-4">Ganti Elemen</h3>
+            <div class="mb-4">
+                <label for="select-tp-elemen" class="block text-sm font-medium text-gray-700 mb-1">Pilih Elemen Baru:</label>
+                <select id="select-tp-elemen" class="select-linked w-full"></select>
+            </div>
+            <p id="modal-tp-elemen-error" class="text-red-500 text-sm mb-4 hidden">Silakan pilih elemen.</p>
+            <div class="flex justify-end space-x-3">
+                <button onclick="tutupModalTpElemen()" class="bg-gray-300 text-gray-800 font-semibold px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors">Batal</button>
+                <button id="modal-tp-elemen-confirm-btn" onclick="" class="bg-sky-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-sky-700 transition-colors">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifikasi Sukses -->
+    <div id="notification" class="fixed bottom-5 right-5 bg-green-600 text-white py-3 px-5 rounded-xl shadow-lg transform transition-all duration-500 ease-in-out translate-y-24 opacity-0 z-50">
+        <p id="notification-message"></p>
+    </div>
+    
+    <!-- Notifikasi Simpan Otomatis -->
+    <div id="autosave-status" class="fixed bottom-5 left-5 text-sm text-gray-500 transition-opacity duration-500 opacity-0 z-50"></div>
+
+
+    <script>
+        // --- DATABASE SEMENTARA & STATE MANAGEMENT ---
+        let namaMataPelajaran = "Bahasa Indonesia";
+        let namaPenyusun = "Ali Maksum, S.Pd.I";
+        let kelasSemester = "VIII / GANJIL";
+        let tahunPelajaran = "2024-2025";
+        let currentUser = null;
+        let archiveListenerUnsubscribe = null; // Untuk listener real-time
+        let debounceTimer; // Untuk simpan otomatis
+        const kepalaMadrasahData = {
+            "MTs. Darul Huda": { title: "Kepala MTs. Darul Huda", name: "SALAMET MOLYONO, S.Pd" },
+            "MA Darul Huda": { title: "Kepala MA Darul Huda", name: "NIRA MELLINA PANGESTIKA, S.Pd" }
+        };
+        let dataCp = [];
+        let dataTp = [];
+        let dataCpDeskripsi = []; // Data untuk tabel deskripsi CP
+        let currentCpIdToChange = null;
+
+        // --- FUNGSI NOTIFIKASI ---
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            const messageElement = document.getElementById('notification-message');
+
+            messageElement.innerHTML = message; // Use innerHTML to allow links
+
+            if (isError) {
+                notification.classList.remove('bg-green-600');
+                notification.classList.add('bg-red-600');
+            } else {
+                notification.classList.remove('bg-red-600');
+                notification.classList.add('bg-green-600');
+            }
+
+            notification.classList.remove('translate-y-24', 'opacity-0');
+            notification.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                notification.classList.add('translate-y-24', 'opacity-0');
+                notification.classList.remove('translate-y-0', 'opacity-100');
+            }, 5000); // Longer timeout for link
+        }
+
+        // --- FUNGSI AUTENTIKASI & DATABASE ---
+        async function handleLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorElement = document.getElementById('login-error');
+            const { auth, createUserWithEmailAndPassword, signInWithEmailAndPassword } = window.firebase;
+
+            if (!email || !password) {
+                errorElement.textContent = "Email dan password tidak boleh kosong.";
+                errorElement.classList.remove('hidden');
+                return;
+            }
+            errorElement.classList.add('hidden');
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                    try {
+                        await createUserWithEmailAndPassword(auth, email, password);
+                    } catch (createError) {
+                        console.error("Error membuat akun:", createError);
+                        errorElement.textContent = "Gagal membuat akun: " + createError.message;
+                        errorElement.classList.remove('hidden');
+                    }
+                } else {
+                    console.error("Error login:", error);
+                    errorElement.textContent = "Gagal login: " + error.message;
+                    errorElement.classList.remove('hidden');
+                }
+            }
+        }
+
+        async function handleLogout() {
+            const { auth, signOut } = window.firebase;
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error("Error logout:", error);
+                showNotification("Gagal untuk logout.", true);
+            }
+        }
+        
+        async function autoSaveData() {
+            if (!currentUser) return;
+            const statusElement = document.getElementById('autosave-status');
+            statusElement.textContent = 'Menyimpan...';
+            statusElement.classList.remove('opacity-0');
+            
+            const { db, doc, setDoc, serverTimestamp } = window.firebase; // Destructure here
+
+            const dataToSave = {
+                namaMataPelajaran,
+                namaPenyusun,
+                kelasSemester,
+                tahunPelajaran,
+                dataCp: JSON.parse(JSON.stringify(dataCp)),
+                dataTp: JSON.parse(JSON.stringify(dataTp)),
+                dataCpDeskripsi: JSON.parse(JSON.stringify(dataCpDeskripsi)),
+                selectedMadrasah: document.querySelector('.madrasah-select').value,
+                timestamp: serverTimestamp()
+            };
+
+            const autoSaveDocRef = doc(db, "perangkatAjar", currentUser.uid, "autosave", "current");
+
+            try {
+                await setDoc(autoSaveDocRef, dataToSave);
+                statusElement.textContent = 'Semua perubahan disimpan.';
+                setTimeout(() => statusElement.classList.add('opacity-0'), 2000);
+            } catch (error) {
+                console.error("Gagal menyimpan otomatis:", error);
+                statusElement.textContent = 'Gagal menyimpan.';
+                statusElement.classList.add('text-red-500');
+                setTimeout(() => {
+                    statusElement.classList.add('opacity-0');
+                    statusElement.classList.remove('text-red-500');
+                }, 3000);
+            }
+        }
+
+        function triggerAutoSave() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(autoSaveData, 2500); // 2.5 detik delay
+        }
+
+        async function handleSimpanArsip() {
+            const { db, collection, addDoc, serverTimestamp } = window.firebase;
+            const archiveNameInput = document.getElementById('input-nama-arsip');
+            const archiveName = archiveNameInput.value.trim();
+            const errorElement = document.getElementById('modal-simpan-error');
+
+            if (!archiveName) {
+                errorElement.classList.remove('hidden');
+                return;
+            }
+            errorElement.classList.add('hidden');
+
+            const dataToSave = {
+                archiveName: archiveName,
+                timestamp: serverTimestamp(),
+                namaMataPelajaran,
+                namaPenyusun,
+                kelasSemester,
+                tahunPelajaran,
+                dataCp: JSON.parse(JSON.stringify(dataCp)),
+                dataTp: JSON.parse(JSON.stringify(dataTp)),
+                dataCpDeskripsi: JSON.parse(JSON.stringify(dataCpDeskripsi)),
+                selectedMadrasah: document.querySelector('.madrasah-select').value,
+            };
+
+            try {
+                const userArchivesColRef = collection(db, "perangkatAjar", currentUser.uid, "archives");
+                await addDoc(userArchivesColRef, dataToSave);
+                sembunyikanModalSimpan();
+                showNotification(`Arsip "${archiveName}" berhasil disimpan!`);
+            } catch (error) {
+                console.error("Error menyimpan arsip ke Firestore:", error);
+                sembunyikanModalSimpan();
+                showNotification("Gagal menyimpan arsip. Lihat konsol untuk detail.", true);
+            }
+        }
+
+        async function handleHapusArsip(archiveId, archiveName) {
+            const { db, doc, deleteDoc } = window.firebase;
+            if (!confirm(`Apakah Anda yakin ingin menghapus arsip "${archiveName}"?`)) {
+                return;
+            }
+            
+            const archiveDocRef = doc(db, "perangkatAjar", currentUser.uid, "archives", archiveId);
+            try {
+                await deleteDoc(archiveDocRef);
+                showNotification(`Arsip "${archiveName}" telah dihapus.`);
+            } catch (error) {
+                console.error("Error menghapus arsip:", error);
+                showNotification("Gagal menghapus arsip.", true);
+            }
+        }
+
+
+        function restoreDataFromObject(data) {
+            namaMataPelajaran = data.namaMataPelajaran || "Bahasa Indonesia";
+            namaPenyusun = data.namaPenyusun || "Ali Maksum, S.Pd.I";
+            kelasSemester = data.kelasSemester || "VIII / GANJIL";
+            tahunPelajaran = data.tahunPelajaran || "2024-2025";
+            dataCp = data.dataCp || [];
+            dataTp = data.dataTp || [];
+            dataCpDeskripsi = data.dataCpDeskripsi || [];
+            
+            // Migrasi data TP untuk mendukung multiple ATP rows dan PROSEM
+            dataTp.forEach(tp => {
+                if (tp.hasOwnProperty('alur') || tp.hasOwnProperty('alokasiAtp')) {
+                    tp.atpList = [{
+                        alur: tp.alur || "",
+                        alokasi: tp.alokasiAtp || "",
+                        alokasiProsem: tp.alokasiProsem || "",
+                        prosemWeeks: tp.prosemWeeks || Array(30).fill(false)
+                    }];
+                    delete tp.alur;
+                    delete tp.alokasiAtp;
+                    delete tp.alokasiProsem;
+                    delete tp.prosemWeeks;
+                }
+                 if (tp.atpList) {
+                    tp.atpList.forEach(atpItem => {
+                        if (!atpItem.hasOwnProperty('alokasiProsem')) {
+                            atpItem.alokasiProsem = ""; 
+                        }
+                        if (!atpItem.hasOwnProperty('prosemWeeks')) {
+                            atpItem.prosemWeeks = Array(30).fill(false);
+                        }
+                    });
+                }
+            });
+
+            const selectedMadrasah = data.selectedMadrasah || "MTs. Darul Huda";
+            document.querySelectorAll('.madrasah-select').forEach(s => s.value = selectedMadrasah);
+            
+            console.log("Data berhasil dipulihkan dari objek arsip.");
+            renderAll();
+        }
+
+        function resetToDefaultData() {
+            namaMataPelajaran = "Bahasa Indonesia";
+            namaPenyusun = "Ali Maksum, S.Pd.I";
+            kelasSemester = "VIII / GANJIL";
+            tahunPelajaran = "2024-2025";
+            dataCp = [
+                { id: 1, elemen: "Membaca dan Memirsa", capaian: "Peserta didik memahami informasi berupa gagasan, pikiran, pandangan, arahan atau pesan dari berbagai jenis teks." },
+                { id: 2, elemen: "Menulis", capaian: "Peserta didik mampu menulis gagasan, pikiran, pandangan, arahan atau pesan tertulis untuk berbagai tujuan secara logis, kritis, dan kreatif." }
+            ];
+            dataTp = [
+                { id: 101, cpId: 1, lingkup: "Teks Deskripsi", tujuan: "Peserta didik dapat mengidentifikasi ciri-ciri teks deskripsi.", atpList: [{ alur: "Mengidentifikasi ciri teks deskripsi", alokasi: "2 JP", alokasiProsem: "2 JP", prosemWeeks: Array(30).fill(false) }], materiProta: "Teks Deskripsi", alokasiProta: "4 JP", kktp: { kriteria: "" } },
+                { id: 102, cpId: 1, lingkup: "Teks Narasi", tujuan: "Peserta didik dapat menceritakan kembali isi teks narasi.", atpList: [{ alur: "Menceritakan kembali isi teks narasi", alokasi: "2 JP", alokasiProsem: "2 JP", prosemWeeks: Array(30).fill(false) }], materiProta: "Teks Narasi", alokasiProta: "4 JP", kktp: { kriteria: "" } },
+                { id: 103, cpId: 2, lingkup: "Menulis Surat", tujuan: "Peserta didik dapat menulis surat pribadi dengan struktur yang benar.", atpList: [{ alur: "Menulis surat pribadi", alokasi: "2 JP", alokasiProsem: "2 JP", prosemWeeks: Array(30).fill(false) }], materiProta: "Surat Pribadi", alokasiProta: "4 JP", kktp: { kriteria: "" } }
+            ];
+            dataCpDeskripsi = [
+                { id: Date.now(), capaian: "Capaian Pembelajaran A", deskripsi: "Deskripsi untuk capaian A."}
+            ];
+            document.querySelectorAll('.madrasah-select').forEach(s => s.value = "MTs. Darul Huda");
+        }
+
+        // --- FUNGSI MODAL ---
+        function sembunyikanModalArsip() {
+            document.getElementById('modal-arsip').classList.add('hidden');
+            if (archiveListenerUnsubscribe) {
+                archiveListenerUnsubscribe();
+                archiveListenerUnsubscribe = null;
+            }
+        }
+
+        function tampilkanModalArsip() {
+            const { db, collection, query, onSnapshot, orderBy } = window.firebase;
+            if (!currentUser) {
+                showNotification("Silakan login untuk melihat arsip.", true);
+                return;
+            }
+
+            const modal = document.getElementById('modal-arsip');
+            const listContainer = document.getElementById('daftar-arsip');
+            listContainer.innerHTML = '<p class="text-gray-500">Memuat arsip...</p>';
+            modal.classList.remove('hidden');
+
+            const archivesColRef = collection(db, "perangkatAjar", currentUser.uid, "archives");
+            const q = query(archivesColRef, orderBy("timestamp", "desc"));
+
+            if (archiveListenerUnsubscribe) {
+                archiveListenerUnsubscribe();
+            }
+
+            archiveListenerUnsubscribe = onSnapshot(q, (querySnapshot) => {
+                if (querySnapshot.empty) {
+                    listContainer.innerHTML = '<p class="text-gray-500">Anda belum memiliki arsip.</p>';
+                    return;
+                }
+
+                listContainer.innerHTML = '';
+                querySnapshot.forEach((doc) => {
+                    const archive = doc.data();
+                    const archiveId = doc.id;
+                    const timestamp = archive.timestamp?.toDate ? archive.timestamp.toDate().toLocaleString('id-ID') : 'Baru saja';
+                    
+                    const archiveElement = document.createElement('div');
+                    archiveElement.className = 'flex justify-between items-center p-3 bg-gray-50 rounded-lg border';
+                    archiveElement.innerHTML = `
+                        <div>
+                            <p class="font-semibold text-gray-800">${archive.archiveName}</p>
+                            <p class="text-xs text-gray-500">Disimpan pada: ${timestamp}</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="loadSpecificArchive('${archiveId}')" class="bg-blue-500 text-white font-semibold px-3 py-1 rounded-md hover:bg-blue-600 text-sm">Muat</button>
+                            <button onclick="handleHapusArsip('${archiveId}', '${archive.archiveName}')" class="bg-red-500 text-white font-semibold px-3 py-1 rounded-md hover:bg-red-600 text-sm">Hapus</button>
+                        </div>
+                    `;
+                    listContainer.appendChild(archiveElement);
+                });
+            }, (error) => {
+                console.error("Gagal memuat arsip (real-time):", error);
+                listContainer.innerHTML = '<p class="text-red-500">Gagal memuat arsip. Coba lagi nanti.</p>';
+            });
+        }
+        
+        function tampilkanModalSimpan() {
+            if (!currentUser) {
+                showNotification("Anda harus login untuk menyimpan data.", true);
+                return;
+            }
+            const modal = document.getElementById('modal-simpan-arsip');
+            const input = document.getElementById('input-nama-arsip');
+            document.getElementById('modal-simpan-error').classList.add('hidden');
+            input.value = `Arsip ${new Date().toLocaleString('id-ID')}`;
+            modal.classList.remove('hidden');
+            input.focus();
+        }
+
+        function sembunyikanModalSimpan() {
+            document.getElementById('modal-simpan-arsip').classList.add('hidden');
+        }
+
+        async function loadSpecificArchive(archiveId) {
+            const { db, doc, getDoc } = window.firebase;
+            if (!currentUser) return;
+
+            const archiveDocRef = doc(db, "perangkatAjar", currentUser.uid, "archives", archiveId);
+            try {
+                const docSnap = await getDoc(archiveDocRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    restoreDataFromObject(data);
+                    showNotification(`Arsip "${data.archiveName}" berhasil dimuat.`);
+                    sembunyikanModalArsip();
+                } else {
+                    showNotification("Arsip tidak ditemukan.", true);
+                }
+            } catch (error) {
+                console.error("Error memuat arsip spesifik:", error);
+                showNotification("Gagal memuat arsip. Lihat konsol untuk detail.", true);
+            }
+        }
+
+        // --- FUNGSI RENDER UTAMA ---
+        function renderAll() {
+            renderTabelCp();
+            renderTabelTp();
+            renderTabelAtp();
+            renderTabelKktpDetail();
+            renderTabelProta();
+            renderTabelProsemDetail();
+            renderTabelCpDeskripsi();
+            syncMataPelajaran();
+            syncNamaPenyusun();
+            syncKepalaMadrasah(document.querySelector('.madrasah-select').value);
+            syncHeaderInfo();
+            attachAutoSaveListeners(); // Pasang listener setelah render
+        }
+        
+        function syncHeaderInfo() {
+            document.querySelectorAll('.kelas-semester-input').forEach(el => el.textContent = `: ${kelasSemester}`);
+            document.querySelectorAll('.tahun-pelajaran-input').forEach(el => el.textContent = `: ${tahunPelajaran}`);
+        }
+
+        // --- FUNGSI NAVIGASI HALAMAN ---
+        function tampilkanHalaman(idHalaman) {
+            document.querySelectorAll('main').forEach(h => h.classList.add('hidden-page'));
+            const halamanAktif = document.getElementById(idHalaman);
+            if (halamanAktif) {
+                halamanAktif.classList.remove('hidden-page');
+            }
+        }
+
+        // --- FUNGSI HELPER ---
+        function generateCpOptions(selectedId = null) {
+            let options = '<option value="" disabled selected>-- Pilih Elemen --</option>';
+            dataCp.forEach(item => {
+                options += `<option value="${item.id}" ${item.id == selectedId ? 'selected' : ''}>${item.elemen}</option>`;
+            });
+            return options;
+        }
+
+        function syncMataPelajaran() {
+            document.querySelectorAll('.mapel-input').forEach(input => {
+                if (document.activeElement !== input) {
+                    input.textContent = `: ${namaMataPelajaran}`;
+                }
+            });
+            document.querySelectorAll('.guru-mapel-text').forEach(p => {
+                p.textContent = `Guru Mapel ${namaMataPelajaran}`;
+            });
+        }
+        
+        function syncKepalaMadrasah(namaMadrasah) {
+            const data = kepalaMadrasahData[namaMadrasah];
+            if (!data) return;
+
+            document.querySelectorAll('.kepala-madrasah-title').forEach(el => {
+                el.textContent = data.title;
+            });
+            document.querySelectorAll('.kepala-madrasah-name').forEach(el => {
+                el.textContent = data.name;
+            });
+        }
+        
+        function syncNamaPenyusun() {
+            const inputPenyusun = document.getElementById('nama-penyusun-input');
+            if (document.activeElement !== inputPenyusun) {
+                inputPenyusun.textContent = namaPenyusun;
+            }
+            document.querySelectorAll('.guru-penyusun-name').forEach(el => {
+                el.textContent = namaPenyusun;
+            });
+        }
+        
+        function attachAutoSaveListeners() {
+            document.querySelectorAll('[contenteditable="true"], select, input[type="checkbox"]').forEach(el => {
+                el.removeEventListener('input', triggerAutoSave); // Mencegah duplikat listener
+                el.removeEventListener('change', triggerAutoSave);
+                el.addEventListener('input', triggerAutoSave);
+                el.addEventListener('change', triggerAutoSave);
+            });
+        }
+
+        // --- RENDER & SINKRONISASI TABEL ---
+
+        function renderTabelCpDeskripsi() {
+            const tabelBody = document.getElementById('tabelCpDeskripsiBody');
+            tabelBody.innerHTML = '';
+            dataCpDeskripsi.forEach(item => {
+                const newRow = tabelBody.insertRow();
+                newRow.className = "group";
+                newRow.innerHTML = `
+                    <td class="px-6 py-4 text-sm font-medium text-gray-900 border border-black" contenteditable="true" onblur="updateCpDeskripsiData(${item.id}, 'capaian', this.textContent)">${item.capaian}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500 border border-black" contenteditable="true" onblur="updateCpDeskripsiData(${item.id}, 'deskripsi', this.textContent)">${item.deskripsi}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium border border-black no-print"><button onclick="hapusBarisCpDeskripsi(${item.id})" class="text-red-600 hover:text-red-900 opacity-0 group-hover:opacity-100 transition-opacity">Hapus</button></td>
+                `;
+            });
+        }
+
+
+        // 1. Tabel CP
+        function renderTabelCp() {
+            const tabelCpBody = document.getElementById('tabelCpBody');
+            tabelCpBody.innerHTML = '';
+            dataCp.forEach(item => {
+                const newRow = tabelCpBody.insertRow();
+                 newRow.className = "group";
+                newRow.innerHTML = `
+                    <td class="px-6 py-4 text-sm font-medium text-gray-900 border border-black" contenteditable="true" onblur="updateCpData(${item.id}, 'elemen', this.textContent)">${item.elemen}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500 border border-black" contenteditable="true" onblur="updateCpData(${item.id}, 'capaian', this.textContent)">${item.capaian}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium border border-black no-print"><button onclick="hapusBarisCp(${item.id})" class="text-red-600 hover:text-red-900 opacity-0 group-hover:opacity-100 transition-opacity">Hapus</button></td>
+                `;
+            });
+        }
+
+        // 2. Tabel TP
+        function renderTabelTp() {
+            const tabelTpBody = document.getElementById('tabelTpBody');
+            tabelTpBody.innerHTML = '';
+            const groupedTp = dataTp.reduce((acc, tp) => {
+                (acc[tp.cpId] = acc[tp.cpId] || []).push(tp);
+                return acc;
+            }, {});
+
+            for (const cpId in groupedTp) {
+                const tpsInGroup = groupedTp[cpId];
+                const cpData = dataCp.find(cp => cp.id == cpId);
+                const elemen = cpData ? cpData.elemen : "Elemen tidak ditemukan.";
+                const capaian = cpData ? cpData.capaian : "Capaian tidak ditemukan.";
+
+                tpsInGroup.forEach((tp, index) => {
+                    const newRow = tabelTpBody.insertRow();
+                    newRow.className = "group";
+                    if (index === 0) {
+                        newRow.innerHTML = `
+                            <td class="px-6 py-4 align-top text-sm font-medium text-gray-900 border border-black data-display" rowspan="${tpsInGroup.length}">${elemen}</td>
+                            <td class="px-6 py-4 align-top text-sm text-gray-500 border border-black data-display" rowspan="${tpsInGroup.length}">${capaian}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500 border border-black" contenteditable="true" onblur="updateTpData(${tp.id}, 'lingkup', this.textContent)">${tp.lingkup}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500 border border-black" contenteditable="true" onblur="updateTpData(${tp.id}, 'tujuan', this.textContent)">${tp.tujuan}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium align-top border border-black no-print">
+                                <div class="flex flex-col items-center space-y-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onclick="tambahSubBarisTp(${cpId})" class="text-green-600 hover:text-green-900 text-xs font-semibold">Tambah TP</button>
+                                    <button onclick="hapusTp(${tp.id})" class="text-red-600 hover:text-red-900 text-xs font-semibold">Hapus</button>
+                                    <button onclick="bukaModalGantiGrup(${cpId})" class="text-blue-600 hover:text-blue-900 text-xs font-semibold">Ganti Grup</button>
+                                </div>
+                            </td>
+                        `;
+                    } else {
+                        newRow.innerHTML = `
+                            <td class="px-6 py-4 text-sm text-gray-500 border border-black" contenteditable="true" onblur="updateTpData(${tp.id}, 'lingkup', this.textContent)">${tp.lingkup}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500 border border-black" contenteditable="true" onblur="updateTpData(${tp.id}, 'tujuan', this.textContent)">${tp.tujuan}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium border border-black no-print"><button onclick="hapusTp(${tp.id})" class="text-red-600 hover:text-red-900 opacity-0 group-hover:opacity-100 transition-opacity">Hapus</button></td>
+                        `;
+                    }
+                });
+            }
+        }
+
+        // 3. Render Tabel ATP
+        function renderTabelAtp() {
+            const tabelAtpBody = document.getElementById('tabelAtpBody');
+            tabelAtpBody.innerHTML = '';
+            const groupedTp = dataTp.reduce((acc, tp) => {
+                (acc[tp.cpId] = acc[tp.cpId] || []).push(tp);
+                return acc;
+            }, {});
+
+            for (const cpId in groupedTp) {
+                const tpsInGroup = groupedTp[cpId];
+                const cpData = dataCp.find(cp => cp.id == cpId);
+                const elemen = cpData ? cpData.elemen : "Elemen tidak ditemukan.";
+                const capaian = cpData ? cpData.capaian : "Capaian tidak ditemukan.";
+                
+                const totalRowsForCpGroup = tpsInGroup.reduce((sum, tp) => {
+                    if (!tp.atpList || tp.atpList.length === 0) {
+                        tp.atpList = [{ alur: "", alokasi: "", alokasiProsem: "", prosemWeeks: Array(30).fill(false) }];
+                    }
+                    return sum + tp.atpList.length;
+                }, 0);
+
+                let isFirstRowOfCpGroup = true;
+
+                tpsInGroup.forEach(tp => {
+                    const atpRowCount = tp.atpList.length;
+
+                    tp.atpList.forEach((atpItem, atpIndex) => {
+                        const newRow = tabelAtpBody.insertRow();
+                        newRow.className = "group";
+                        let rowHTML = '';
+
+                        if (isFirstRowOfCpGroup) {
+                            rowHTML += `<td class="px-6 py-4 align-top text-sm font-medium text-gray-900 border border-black data-display" rowspan="${totalRowsForCpGroup}">${elemen}</td>`;
+                            rowHTML += `<td class="px-6 py-4 align-top text-sm text-gray-500 border border-black data-display" rowspan="${totalRowsForCpGroup}">${capaian}</td>`;
+                            isFirstRowOfCpGroup = false;
+                        }
+
+                        if (atpIndex === 0) {
+                            rowHTML += `<td class="px-6 py-4 align-top text-sm text-gray-500 border border-black data-display" rowspan="${atpRowCount}">${tp.tujuan}</td>`;
+                        }
+
+                        rowHTML += `<td class="px-6 py-4 text-sm text-gray-500 border border-black" contenteditable="true" onblur="updateAtpData(${tp.id}, ${atpIndex}, 'alur', this.textContent)">${atpItem.alur}</td>`;
+                        rowHTML += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border border-black" contenteditable="true" onblur="updateAtpData(${tp.id}, ${atpIndex}, 'alokasi', this.textContent)">${atpItem.alokasi}</td>`;
+                        
+                        let actionCellHTML = `<td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium border border-black no-print"><div class="flex items-center justify-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">`;
+                        if (atpIndex === 0) {
+                            actionCellHTML += `<button onclick="tambahBarisAtp(${tp.id})" class="text-green-600 hover:text-green-900" title="Tambah Baris"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg></button>`;
+                        }
+                        if (tp.atpList.length > 1) {
+                            actionCellHTML += `<button onclick="hapusBarisAtp(${tp.id}, ${atpIndex})" class="text-red-600 hover:text-red-900" title="Hapus Baris"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clip-rule="evenodd" /></svg></button>`;
+                        }
+                        actionCellHTML += `</div></td>`;
+                        rowHTML += actionCellHTML;
+                        
+                        newRow.innerHTML = rowHTML;
+                    });
+                });
+            }
+        }
+        
+        // 4. Render Tabel KKTP
+        function renderTabelKktpDetail() {
+            const tabelKktpDetailBody = document.getElementById('tabelKktpDetailBody');
+            tabelKktpDetailBody.innerHTML = '';
+            dataTp.forEach((tp, index) => {
+                const newRow = tabelKktpDetailBody.insertRow();
+                let cellsHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border border-black">${index + 1}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500 border border-black data-display">${tp.tujuan}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500 border border-black" contenteditable="true" onblur="updateTpData(${tp.id}, 'kktp', { kriteria: this.textContent })">${tp.kktp.kriteria}</td>`;
+                for(let i=0;i<5;i++){cellsHTML += `<td class="px-2 py-4 text-sm text-gray-500 border border-black" contenteditable="true"></td>`;}
+                cellsHTML += `<td class="px-6 py-4 text-sm text-gray-500 border border-black" contenteditable="true"></td><td class="px-6 py-4 text-sm text-gray-500 border border-black" contenteditable="true"></td>`;
+                newRow.innerHTML = cellsHTML;
+            });
+        }
+
+        // 5. Render Tabel Prota
+        function renderTabelProta() {
+            const tabelProtaBody = document.getElementById('tabelProtaBody');
+            tabelProtaBody.innerHTML = '';
+            let rowCounter = 0;
+            dataTp.forEach(tp => {
+                const validAtpList = tp.atpList ? tp.atpList.filter(item => item.alur && item.alur.trim() !== '') : [];
+                
+                if (validAtpList.length === 0) {
+                    return; // Lewati TP ini jika tidak ada alur yang valid
+                }
+
+                validAtpList.forEach((atpItem, atpIndex) => {
+                    rowCounter++;
+                    const newRow = tabelProtaBody.insertRow();
+                    let rowHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border border-black align-top">${rowCounter}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500 border border-black data-display">${atpItem.alur}</td>
+                    `;
+                    
+                    if (atpIndex === 0) {
+                        rowHTML += `
+                            <td class="px-6 py-4 text-sm text-gray-500 border border-black align-top" rowspan="${validAtpList.length}" contenteditable="true" onblur="updateTpData(${tp.id}, 'materiProta', this.textContent)">${tp.materiProta}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500 border border-black align-top" rowspan="${validAtpList.length}" contenteditable="true" onblur="updateTpData(${tp.id}, 'alokasiProta', this.textContent)">${tp.alokasiProta}</td>
+                        `;
+                    }
+                    
+                    newRow.innerHTML = rowHTML;
+                });
+            });
+        }
+
+        // 6. Render Tabel Prosem
+        function renderTabelProsemDetail() {
+            const tabelProsemDetailBody = document.getElementById('tabelProsemDetailBody');
+            tabelProsemDetailBody.innerHTML = '';
+            let rowCounter = 0;
+            dataTp.forEach(tp => {
+                const validAtpList = tp.atpList ? tp.atpList.filter(item => item.alur && item.alur.trim() !== '') : [];
+
+                if (validAtpList.length === 0) {
+                    return; // Lewati TP ini jika tidak ada alur yang valid
+                }
+                
+                validAtpList.forEach((atpItem, atpIndex) => {
+                    rowCounter++;
+                    const newRow = tabelProsemDetailBody.insertRow();
+                    let cellsHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border border-black">${rowCounter}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500 border border-black data-display text-left prosem-atp-col">${atpItem.alur}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500 border border-black" contenteditable="true" onblur="updateAtpProsemData(${tp.id}, ${atpIndex}, 'alokasiProsem', this.textContent)">${atpItem.alokasiProsem}</td>`;
+                    
+                    atpItem.prosemWeeks.forEach((isChecked, weekIndex) => {
+                        cellsHTML += `<td class="p-0 border border-black"><div class="flex justify-center items-center h-full w-full"><input type="checkbox" class="h-4 w-4 text-fuchsia-600 border-gray-400 rounded focus:ring-fuchsia-500 cursor-pointer" ${isChecked ? 'checked' : ''} onchange="updateProsemWeek(${tp.id}, ${atpIndex}, ${weekIndex}, this.checked)"></div></td>`;
+                    });
+                    newRow.innerHTML = cellsHTML;
+                });
+            });
+        }
+
+        // --- CRUD & ACTIONS ---
+
+        // CRUD CP Deskripsi
+        function tambahBarisCpDeskripsi() { const newId = Date.now(); dataCpDeskripsi.push({ id: newId, capaian: "Capaian Baru", deskripsi: "Deskripsi baru..." }); renderAll(); }
+        function hapusBarisCpDeskripsi(id) { dataCpDeskripsi = dataCpDeskripsi.filter(item => item.id !== id); renderAll(); }
+        function updateCpDeskripsiData(id, field, value) { const item = dataCpDeskripsi.find(item => item.id === id); if (item) item[field] = value; triggerAutoSave(); }
+
+
+        // CRUD CP
+        function tambahBarisCp() { const newId = Date.now(); dataCp.push({ id: newId, elemen: "Elemen Baru", capaian: "Capaian pembelajaran baru..." }); renderAll(); }
+        function hapusBarisCp(id) { dataCp = dataCp.filter(item => item.id !== id); dataTp = dataTp.filter(tp => tp.cpId !== id); renderAll(); }
+        function updateCpData(id, field, value) { const item = dataCp.find(item => item.id === id); if (item) item[field] = value; renderAll(); }
+
+        // CRUD TP
+        function tambahSubBarisTp(cpId) { const newId = Date.now(); dataTp.push({ id: newId, cpId: cpId, lingkup: "Lingkup Baru", tujuan: "Tujuan Baru", atpList: [{ alur: "", alokasi: "", alokasiProsem: "", prosemWeeks: Array(30).fill(false) }], materiProta: "", alokasiProta: "", kktp: {kriteria: ""} }); renderAll(); }
+        function hapusTp(id) { dataTp = dataTp.filter(item => item.id !== id); renderAll(); }
+        function updateTpData(id, field, value) {
+            const item = dataTp.find(item => item.id === id);
+            if (item) {
+                if (field === 'kktp') {
+                    item.kktp.kriteria = value.kriteria;
+                } else {
+                    item[field] = value;
+                }
+                renderAll();
+            }
+        }
+        
+        // CRUD ATP & PROSEM
+        function tambahBarisAtp(tpId) {
+            const tp = dataTp.find(t => t.id === tpId);
+            if (tp) {
+                if (!tp.atpList) { tp.atpList = []; }
+                tp.atpList.push({ alur: "Alur baru...", alokasi: "...", alokasiProsem: "", prosemWeeks: Array(30).fill(false) });
+                renderAll();
+            }
+        }
+
+        function hapusBarisAtp(tpId, atpIndex) {
+            const tp = dataTp.find(t => t.id === tpId);
+            if (tp && tp.atpList && tp.atpList.length > 1) {
+                tp.atpList.splice(atpIndex, 1);
+                renderAll();
+            } else {
+                showNotification("Tidak dapat menghapus baris terakhir.", true);
+            }
+        }
+
+        function updateAtpData(tpId, atpIndex, field, value) {
+            const tp = dataTp.find(t => t.id === tpId);
+            if (tp && tp.atpList[atpIndex]) {
+                tp.atpList[atpIndex][field] = value;
+                triggerAutoSave();
+            }
+        }
+        
+        function updateAtpProsemData(tpId, atpIndex, field, value) {
+            const tp = dataTp.find(t => t.id === tpId);
+            if (tp && tp.atpList[atpIndex]) {
+                tp.atpList[atpIndex][field] = value;
+                triggerAutoSave();
+            }
+        }
+
+        function updateProsemWeek(tpId, atpIndex, weekIndex, isChecked) {
+            const tp = dataTp.find(t => t.id === tpId);
+            if (tp && tp.atpList[atpIndex]) {
+                tp.atpList[atpIndex].prosemWeeks[weekIndex] = isChecked;
+                triggerAutoSave();
+            }
+        }
+
+
+        // Modal Logic for TP Grouping
+        function tutupModalTpElemen() { document.getElementById('modal-tp-elemen').classList.add('hidden'); }
+        
+        function bukaModalTambahGrup() {
+            if (dataCp.length === 0) { showNotification("Silakan buat Capaian Pembelajaran (CP) terlebih dahulu.", true); return; }
+            document.getElementById('modal-tp-elemen-title').textContent = "Tambah Grup Elemen Baru";
+            document.getElementById('select-tp-elemen').innerHTML = generateCpOptions();
+            document.getElementById('modal-tp-elemen-error').classList.add('hidden');
+            const confirmBtn = document.getElementById('modal-tp-elemen-confirm-btn');
+            confirmBtn.textContent = "Tambah";
+            confirmBtn.onclick = handleTambahGrup;
+            document.getElementById('modal-tp-elemen').classList.remove('hidden');
+        }
+
+        function handleTambahGrup() {
+            const select = document.getElementById('select-tp-elemen');
+            const newCpId = select.value;
+            if (!newCpId) { document.getElementById('modal-tp-elemen-error').classList.remove('hidden'); return; }
+            const newId = Date.now();
+            dataTp.push({ id: newId, cpId: parseInt(newCpId), lingkup: "Lingkup Baru", tujuan: "Tujuan Baru", atpList: [{ alur: "", alokasi: "", alokasiProsem: "", prosemWeeks: Array(30).fill(false) }], materiProta: "", alokasiProta: "", kktp: {kriteria: ""} });
+            renderAll();
+            tutupModalTpElemen();
+        }
+
+        function bukaModalGantiGrup(cpId) {
+            currentCpIdToChange = cpId;
+            document.getElementById('modal-tp-elemen-title').textContent = "Ganti Grup Elemen";
+            document.getElementById('select-tp-elemen').innerHTML = generateCpOptions(cpId);
+            document.getElementById('modal-tp-elemen-error').classList.add('hidden');
+            const confirmBtn = document.getElementById('modal-tp-elemen-confirm-btn');
+            confirmBtn.textContent = "Simpan";
+            confirmBtn.onclick = handleGantiGrup;
+            document.getElementById('modal-tp-elemen').classList.remove('hidden');
+        }
+
+        function handleGantiGrup() {
+            const select = document.getElementById('select-tp-elemen');
+            const newCpId = select.value;
+            if (!newCpId || !currentCpIdToChange) { document.getElementById('modal-tp-elemen-error').classList.remove('hidden'); return; }
+            const oldCpId = currentCpIdToChange;
+            if (parseInt(newCpId) === oldCpId) { tutupModalTpElemen(); return; } // No change
+            dataTp.forEach(tp => { if (tp.cpId === oldCpId) { tp.cpId = parseInt(newCpId); } });
+            renderAll();
+            tutupModalTpElemen();
+            currentCpIdToChange = null;
+        }
+
+        // Aksi Tabel PROTA
+        function tambahPemisahProta() { const tabelProtaBody = document.getElementById('tabelProtaBody'); const newRow = tabelProtaBody.insertRow(); newRow.classList.add('semester-separator'); newRow.innerHTML = `<td colspan="4" class="px-6 py-2 text-center font-bold bg-cyan-100 text-cyan-800 border border-black" contenteditable="true">SEMESTER BARU</td>`; }
+        function hapusPemisahProta(button) { const separator = button.closest('main').querySelector('.semester-separator:last-of-type'); if (separator) separator.remove(); }
+        
+        // --- FUNGSI PEMBUATAN PDF ---
+        function cetakHalamanTunggal(pageId) {
+            cetakHalaman([pageId]);
+        }
+
+        function tampilkanModalCetakSemua() {
+            const daftarHalamanContainer = document.getElementById('daftar-halaman-cetak');
+            daftarHalamanContainer.innerHTML = '';
+            document.querySelectorAll('main[data-title]').forEach(halaman => {
+                if(halaman.id !== 'halaman-utama' && halaman.id !== 'halaman-login') {
+                    const pageId = halaman.id;
+                    const pageTitle = halaman.dataset.title || pageId;
+                    const checkboxHTML = `
+                        <label for="cek-cetak-${pageId}" class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox" id="cek-cetak-${pageId}" data-page-id="${pageId}" class="h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                            <span class="text-gray-700">${pageTitle}</span>
+                        </label>`;
+                    daftarHalamanContainer.insertAdjacentHTML('beforeend', checkboxHTML);
+                }
+            });
+            document.getElementById('modal-cetak-error').classList.add('hidden');
+            document.getElementById('modal-cetak-semua').classList.remove('hidden');
+        }
+
+        function sembunyikanModalCetakSemua() {
+            document.getElementById('modal-cetak-semua').classList.add('hidden');
+        }
+
+        function handleCetakPilihan() {
+            const halamanTerpilihIds = Array.from(document.querySelectorAll('#daftar-halaman-cetak input:checked')).map(cb => cb.dataset.pageId);
+            if (halamanTerpilihIds.length === 0) {
+                document.getElementById('modal-cetak-error').classList.remove('hidden');
+                return;
+            }
+            sembunyikanModalCetakSemua();
+            cetakHalaman(halamanTerpilihIds);
+        }
+
+        function cetakHalaman(pageIds = []) {
+            if (pageIds.length === 0) {
+                showNotification("Tidak ada halaman yang dipilih untuk dicetak.", true);
+                return;
+            }
+
+            const printArea = document.createElement('div');
+            printArea.id = 'print-area';
+
+            pageIds.forEach(id => {
+                const pageElement = document.getElementById(id);
+                if (pageElement) {
+                    const clone = pageElement.cloneNode(true);
+                    clone.classList.remove('hidden-page');
+                    clone.classList.add('print-page');
+                    printArea.appendChild(clone);
+                }
+            });
+            
+            document.body.appendChild(printArea);
+
+            const styleId = 'print-orientation-style';
+            let styleElement = document.getElementById(styleId);
+            if (!styleElement) {
+                styleElement = document.createElement('style');
+                styleElement.id = styleId;
+                document.head.appendChild(styleElement);
+            }
+
+            const isProsemSelected = pageIds.includes('halaman-prosem');
+            const isOnlyProsemSelected = pageIds.length === 1 && isProsemSelected;
+
+            let pageStyle = `@page { size: ${isOnlyProsemSelected ? 'landscape' : 'portrait'};`;
+            if (isOnlyProsemSelected) {
+                pageStyle += ' margin: 1cm 0.5cm;';
+            }
+            pageStyle += ' }';
+            
+            styleElement.innerHTML = pageStyle;
+
+            window.print();
+
+            // Cleanup setelah dialog cetak ditutup
+            const cleanup = () => {
+                const pa = document.getElementById('print-area');
+                if (pa) pa.remove();
+                const se = document.getElementById(styleId);
+                if (se) se.remove();
+                window.onafterprint = null; // Hapus event handler
+            };
+
+            window.onafterprint = cleanup;
+            
+            // Fallback untuk browser yang tidak mendukung onafterprint
+            setTimeout(cleanup, 1000);
+        }
+
+
+        // --- INISIALISASI ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const { auth, onAuthStateChanged } = window.firebase;
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    currentUser = user;
+                    console.log("Pengguna login:", user.uid);
+                    
+                    const { db, doc, getDoc, collection, query, getDocs, orderBy, limit } = window.firebase;
+                    const autoSaveDocRef = doc(db, "perangkatAjar", currentUser.uid, "autosave", "current");
+                    const autoSaveSnap = await getDoc(autoSaveDocRef);
+
+                    if (autoSaveSnap.exists()) {
+                        console.log("Memuat data dari simpanan otomatis...");
+                        restoreDataFromObject(autoSaveSnap.data());
+                        showNotification("Draft terakhir Anda telah dipulihkan.", false);
+                    } else {
+                        const archivesColRef = collection(db, "perangkatAjar", currentUser.uid, "archives");
+                        const q = query(archivesColRef, orderBy("timestamp", "desc"), limit(1));
+                        const querySnapshot = await getDocs(q);
+                        if (!querySnapshot.empty) {
+                            const latestArchive = querySnapshot.docs[0].data();
+                            console.log("Memuat arsip terbaru...");
+                            restoreDataFromObject(latestArchive);
+                        } else {
+                            console.log("Tidak ada arsip ditemukan. Menggunakan data default.");
+                            resetToDefaultData();
+                            renderAll();
+                        }
+                    }
+
+                    tampilkanHalaman('halaman-utama');
+                } else {
+                    currentUser = null;
+                    if (archiveListenerUnsubscribe) {
+                        archiveListenerUnsubscribe();
+                        archiveListenerUnsubscribe = null;
+                    }
+                    console.log("Pengguna logout.");
+                    resetToDefaultData();
+                    renderAll();
+                    tampilkanHalaman('halaman-login');
+                }
+            });
+
+            renderAll();
+
+            const allMadrasahSelects = document.querySelectorAll('.madrasah-select');
+            allMadrasahSelects.forEach(select => {
+                select.addEventListener('change', (event) => {
+                    const newValue = event.target.value;
+                    allMadrasahSelects.forEach(s => s.value = newValue);
+                    syncKepalaMadrasah(newValue);
+                });
+            });
+            syncKepalaMadrasah(allMadrasahSelects[0].value);
+            
+            document.querySelectorAll('.mapel-input').forEach(input => {
+                input.addEventListener('blur', (event) => {
+                    namaMataPelajaran = event.target.textContent.replace(':', '').trim();
+                    syncMataPelajaran();
+                });
+            });
+            syncMataPelajaran();
+
+            document.getElementById('nama-penyusun-input').addEventListener('blur', (event) => {
+                namaPenyusun = event.target.textContent;
+                syncNamaPenyusun();
+            });
+            syncNamaPenyusun();
+
+            const weeksHeader = document.getElementById('prosem-weeks-header');
+            if(weeksHeader) {
+                let headerHTML = '';
+                ['Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'].forEach(() => {
+                    for(let i=1; i<=5; i++) { headerHTML += `<th scope="col" class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border border-black">${i}</th>`; }
+                });
+                weeksHeader.innerHTML = headerHTML;
+            }
+        });
+    </script>
+</body>
+</html>
